@@ -19,7 +19,14 @@ export function SkiaScene({ people, count, onFrame, onError }: Props) {
   const { width: w, height: h } = useWindowDimensions();
   const bg = useImage(require('../../../assets/bake/hall.png'), e => onError(e.message));
   const sprites = useImage(require('../../../assets/bake/people.png'), e => onError(e.message));
-  const pic = useSharedValue<SkPicture>(Skia.PictureRecorder().finishRecordingAsPicture());
+  // Пустая стартовая картинка — записью с beginRecording: без него нативная Skia отдаёт пустой указатель и падает
+  // (0.1.1 на телефоне; CanvasKit в браузере это прощал). useMemo — чтобы не записывать её на каждой отрисовке.
+  const empty = useMemo(() => {
+    const r = Skia.PictureRecorder();
+    r.beginRecording(Skia.XYWHRect(0, 0, 1, 1));
+    return r.finishRecordingAsPicture();
+  }, []);
+  const pic = useSharedValue<SkPicture>(empty);
   const cpu = useRef(0);
   const sink = useRef(onFrame);
   useEffect(() => {
