@@ -51,3 +51,12 @@ test('кадры шага и покоя — в текстуре костей', (
     }
   }
 });
+
+test('каждый кусок файла — в своём буфере с нуля (нативный Skia.Data.fromBytes не смотрит на смещение)', () => {
+  const own = (a: ArrayBufferView) => a.byteOffset === 0 && a.byteLength === a.buffer.byteLength;
+  expect(own(pack.bones)).toBe(true);
+  for (const l of pack.looks) {
+    expect(own(l.atlas)).toBe(true);
+    for (const g of [l.full, l.lod]) for (const a of [g.position, g.normal, g.uv, g.skinIndex, g.skinWeight, g.index]) expect(own(a)).toBe(true);
+  }
+});

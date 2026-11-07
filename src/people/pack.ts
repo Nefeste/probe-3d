@@ -89,18 +89,20 @@ export function decodePack(buf: ArrayBuffer): Pack {
     o += pad(n);
     return at;
   };
-  const f32 = (n: number) => new Float32Array(buf, take(n), n / 4);
+  // Каждый кусок — копией в свой буфер, а не видом внутрь файла: нативный Skia.Data.fromBytes берёт весь буфер под
+  // массивом и не смотрит на смещение — атлас вида в общем файле на телефоне «не читался» (0.1.0, docs/spec.md).
+  const f32 = (n: number) => new Float32Array(buf, take(n), n / 4).slice();
   const boneBytes = head.boneW * head.boneH * 4 * 2;
-  const bones = new Uint16Array(buf, take(boneBytes), boneBytes / 2);
+  const bones = new Uint16Array(buf, take(boneBytes), boneBytes / 2).slice();
   const geo = (sizes: number[]): Geo => {
     const [position, normal, uv, skinIndex, skinWeight] = ATTRS.map((_, i) => f32(sizes[i]));
-    const index = new Uint16Array(buf, take(sizes[5]), sizes[5] / 2);
+    const index = new Uint16Array(buf, take(sizes[5]), sizes[5] / 2).slice();
     return { position, normal, uv, skinIndex, skinWeight, index };
   };
   const looks = head.looks.map(l => {
     const full = geo(l.full);
     const lod = geo(l.lod);
-    const atlas = new Uint8Array(buf, take(l.atlas), l.atlas);
+    const atlas = new Uint8Array(buf, take(l.atlas), l.atlas).slice();
     return { name: l.name, height: l.height, walk: l.walk, idle: l.idle, walkClip: l.walkClip, full, lod, atlas };
   });
   return { boneW: head.boneW, boneH: head.boneH, stride: head.stride, bones, looks };
