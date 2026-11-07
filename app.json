@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Проба 3D",
+    "slug": "probe-3d",
+    "version": "0.1.0",
+    "orientation": "landscape",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F1EFE8",
+    "android": {
+      "package": "games.gornitsa.probe3d",
+      "versionCode": 1,
+      "predictiveBackGestureEnabled": false,
+      "allowBackup": false
+    },
+    "web": {
+      "lang": "ru",
+      "output": "single",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-asset",
+      "react-native-webgpu"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun-types"],
+    "noEmit": true,
+    "lib": ["ESNext", "DOM"]
+  },
+  "include": ["./**/*.ts", "../src/sim/**/*.ts", "../src/people/**/*.ts", "../src/art/**/*.ts", "../src/scenes/hall.ts", "../src/scenes/gl/scene.ts", "../src/scenes/gpu/scene.ts"],
+  "exclude": []
+}

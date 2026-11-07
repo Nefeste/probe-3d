@@ -1,0 +1,8 @@
+node_modules/
+dist-web/
+public/
+android/
+ios/
+.expo/
+tools/e2e/out/
+*.log
