@@ -18,7 +18,9 @@ async function bytesOf(mod: number): Promise<ArrayBuffer> {
 }
 
 function decodeAtlas(bytes: Uint8Array): Atlas {
-  const img = Skia.Image.MakeImageFromEncoded(Skia.Data.fromBytes(bytes));
+  // у массива должен быть свой буфер с нуля: нативный fromBytes берёт весь буфер (см. src/people/pack.ts, decodePack)
+  const own = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength ? bytes : bytes.slice();
+  const img = Skia.Image.MakeImageFromEncoded(Skia.Data.fromBytes(own));
   if (!img) throw new Error('atlas: cannot decode');
   const w = img.width();
   const h = img.height();

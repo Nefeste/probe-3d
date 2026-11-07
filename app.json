@@ -2,13 +2,13 @@
   "expo": {
     "name": "Проба 3D",
     "slug": "probe-3d",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "orientation": "landscape",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F1EFE8",
     "android": {
       "package": "games.gornitsa.probe3d",
-      "versionCode": 1,
+      "versionCode": 2,
       "predictiveBackGestureEnabled": false,
       "allowBackup": false
     },
