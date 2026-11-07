@@ -1,0 +1,21 @@
+// Все строки пробы — здесь (правило устава: строки для игрока — в src/i18n).
+export const T = {
+  title: 'Проба 3D',
+  subtitle: 'Люди «Больницы» в зале: Three.js (WebGL и WebGPU) и Skia со спрайтами',
+  run: 'Замер всего',
+  runNote: 'Около полутора минут. Телефон не трогайте, экран не гасите.',
+  live: 'Посмотреть',
+  back: 'Назад',
+  loading: 'Загрузка людей…',
+  variant: { skia: 'Skia, спрайты', webgl: 'Three.js, WebGL', webgpu: 'Three.js, WebGPU' } as Record<string, string>,
+  detail: { full: 'полные модели', lod: 'упрощённые', sprite: 'спрайты' } as Record<string, string>,
+  people: (n: number) => `${n} чел.`,
+  step: (i: number, n: number) => `Замер ${i} из ${n}`,
+  results: 'Итоги',
+  device: (d: string) => `Телефон: ${d}`,
+  cols: ['Вариант', 'Люди', 'к/с', 'медиана, мс', '99 %, мс', 'худший, мс', 'долгих', 'процессор, мс', 'первый кадр, мс'],
+  failed: (e: string) => `не запустилось: ${e}`,
+  hud: (fps: number, ms: number, tris: number) => `${fps.toFixed(0)} к/с · ${ms.toFixed(1)} мс${tris ? ` · ${Math.round(tris / 1000)} тыс. треуг.` : ''}`,
+  again: 'Ещё раз',
+  shot: 'Сделайте снимок экрана и пришлите его — это и есть результат пробы.',
+};

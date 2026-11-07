@@ -1,0 +1,117 @@
+# APK пробы — только по тегу vX.Y.Z (устав, ADR 0019). Тег должен совпасть с версией в app.json. Проба не выходит в
+# магазин: APK подписан отладочным ключом шаблона React Native (docs/spec.md, «Решения агента»), постоянного ключа нет.
+# Перед сборкой — проверки и сценарий в браузере. Выпуск — предварительный, с APK.
+name: Android APK
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Проверки и сценарий в браузере
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Тег и версия совпадают
+        run: |
+          V="$(node -p "require('./app.json').expo.version")"
+          [ "$GITHUB_REF_NAME" = "v$V" ] || { echo "::error::Тег $GITHUB_REF_NAME, а в app.json версия $V. Тег — v$V."; exit 1; }
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.11
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: bun test tools/test
+      - run: npm run export:web
+      - name: Chromium для Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Сценарий
+        env:
+          CHROMIUM_PATH: ''
+        run: bun tools/e2e/web.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        continue-on-error: true
+        with:
+          name: screens-${{ github.run_number }}
+          path: tools/e2e/out/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  build:
+    name: Сборка APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+      - run: npm ci
+      - name: Нативный проект (expo prebuild)
+        run: npx expo prebuild --platform android --no-install
+      - name: Больше памяти Gradle
+        run: printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8\n' >> android/gradle.properties
+      - name: Сборка
+        working-directory: android
+        env:
+          NODE_ENV: production
+        # 64- и 32-битный ARM
+        run: ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+      - name: Собрать
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/probe-3d-${{ github.run_number }}.apk"
+          ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ github.run_number }}
+          path: dist/
+          retention-days: 7
+
+  release:
+    name: Выпуск
+    needs: [checks, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk-${{ github.run_number }}
+          path: dist
+      - name: Что в выпуске
+        run: |
+          SIZE=$(du -m dist/*.apk | cut -f1)
+          {
+            echo "Проба 3D: люди «Больницы» в зале — Three.js (WebGL и WebGPU) и Skia со спрайтами."
+            echo
+            echo "Поставьте APK, нажмите «Замер всего» и пришлите снимок таблицы итогов."
+            echo
+            echo "Вес APK: ${SIZE} МБ. Подписан отладочным ключом: это проба, не игра."
+            echo "Собрано из коммита ${{ github.sha }}, сборка ${{ github.run_number }}."
+          } > release.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Проба 3D ${{ github.ref_name }}
+          body_path: release.md
+          files: dist/*.apk
+          prerelease: true
